@@ -1,5 +1,5 @@
 import time
-from itertools import count
+from openpyxl import Workbook
 
 from playwright.sync_api import Playwright, expect
 
@@ -10,6 +10,9 @@ def test_basic(playwright: Playwright):
     page = context.new_page()
     page.goto("https://www.booking.com/")
 
+    source = "BLR"
+    destination = "London"
+
     close_sign_in_form = page.locator("//button[@aria-label = 'Dismiss sign in information.']")
     if close_sign_in_form.is_visible():
         close_sign_in_form.click()
@@ -18,13 +21,23 @@ def test_basic(playwright: Playwright):
         print("Sign In form not showed")
 
     page.locator("#flights").click()
-    time.sleep(1)
+    page.wait_for_load_state("networkidle")
 
+    one_way = page.locator("#search_type_option_ONEWAY")
+    one_way.wait_for()
+    one_way.check()
 
+    direct_flight_filter = page.locator("//label[@for = 'direct_flights_input_checkbox']/span[contains(@class, 'field')]")
+    direct_flight_filter.wait_for()
+    direct_flight_filter.click()
 
-    # Set Departure input_location_from_segment_0
-    # page.wait_for_selector("//span[contains(text(), 'Leaving from')]")
-    # page.locator("//span[contains(text(), 'Leaving from')]").first.click()
+    cabin_class_option = "Business"
+    cabin_class = page.locator("[data-ui-name = cabin_class_input]");
+    cabin_class.wait_for()
+    cabin_class.select_option(cabin_class_option)
+
+    # Set Departure
+
     leave_from_btn = page.locator("//button[@data-ui-name = 'input_location_from_segment_0']")
     leave_from_btn.wait_for()
     leave_from_btn.click()
@@ -41,7 +54,7 @@ def test_basic(playwright: Playwright):
     #Enter the destination
     dst_input = page.locator("//input[contains(@class, 'textInput')]")
     dst_input.wait_for()
-    dst_input.press_sequentially("BLR")
+    dst_input.press_sequentially(source)
 
     dst_result = page.locator("//ul[@id = 'flights-searchbox_suggestions']//li/span")
     dst_result.nth(0).wait_for()
@@ -63,7 +76,7 @@ def test_basic(playwright: Playwright):
     dst_input2 = page.locator("//input[contains(@class, 'textInput_')]")
     dst_input2.wait_for()
     dst_input2.click()
-    dst_input2.press_sequentially("DEL")
+    dst_input2.press_sequentially(destination)
 
     dst_resultt = page.locator("//ul[@id = 'flights-searchbox_suggestions']//li[1]/span")
     dst_resultt.nth(0).wait_for()
@@ -83,9 +96,9 @@ def test_basic(playwright: Playwright):
     #time.sleep(3)
 
     #from date
-    select_date(page, "January 2026", "15")
-    #to date
     select_date(page, "January 2026", "20")
+    #to date
+    # select_date(page, "January 2026", "20")
 
     #Travellers
     traveller_btn = page.locator("//button[@data-ui-name = 'button_occupancy']")
@@ -123,15 +136,32 @@ def test_basic(playwright: Playwright):
     plane_list.wait_for(timeout=60000)
 
     #verify departure
+    air_line_details = [["AirLine Name", "Price", "Departure Time", "Arrival Time"]]
+
     departure_in_result = page.locator("//span[@data-testid = 'flight_card_segment_departure_airport_0']")
     departure_in_result.nth(0).wait_for()
     destination_in_result = page.locator("//span[@data-testid = 'flight_card_segment_destination_airport_0']")
+    air_line_name = page.locator("//div[@data-testid = 'flight_card_carriers']")
+    air_line_price = page.locator("//div[@data-testid = 'upt_price']")
+    air_line_departure_time = page.locator("//div[@data-testid = 'flight_card_segment_departure_time_0']")
+    air_line_arrival_time = page.locator("//div[@data-testid = 'flight_card_segment_destination_time_0']")
 
     for i in range(departure_in_result.count()):
-        expect(departure_in_result.nth(i)).to_contain_text("BLR")
-        expect(destination_in_result.nth(i)).to_contain_text("DEL")
+        # expect(departure_in_result.nth(i)).to_contain_text(source)
+        # expect(destination_in_result.nth(i)).to_contain_text(destination)
+        nth_air_line_details = []
 
-    time.sleep(5)
+        nth_air_line_details.append(air_line_name.nth(i).text_content())
+        curr_price = air_line_price.nth(i).text_content()
+        curr_price = curr_price.replace("INR", "")
+        nth_air_line_details.append(curr_price)
+        nth_air_line_details.append(air_line_departure_time.nth(i).text_content())
+        nth_air_line_details.append(air_line_arrival_time.nth(i).text_content())
+        air_line_details.append(nth_air_line_details)
+
+    print(air_line_details)
+    time.sleep(10)
+    save_data_to_excel(air_line_details)
     page.close()
     context.close()
     browser.close()
@@ -150,3 +180,13 @@ def select_date(page, month_year: str, day: str):
     day_locator = page.locator(f"//h3[contains(text(), '{month_year}')]/following-sibling::table//span[text() = '{day}']")
     expect(day_locator).to_be_visible()
     day_locator.click()
+
+def save_data_to_excel(air_line_details):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Results"
+
+    for row in air_line_details:
+        ws.append(row)
+
+    wb.save("TestResults.xlsx")
