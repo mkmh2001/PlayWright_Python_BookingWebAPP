@@ -13,21 +13,18 @@ data = Helper.get_test_data()
 @pytest.mark.parametrize('data', data)
 def test_verify_flights(browser_instance, data):
     page = browser_instance
-    source = data["source"]
-    destination = data["destination"]
-    adults = data["adults"]
-    children = data["children"]
 
-    home_page = HomePage(page)
+
+    home_page = HomePage(page, data)
     home_page.open_flights_page()
     home_page.set_filters()
-    home_page.set_departure_place(source)
-    home_page.set_destination_place(destination)
+    home_page.set_departure_place()
+    home_page.set_destination_place()
     home_page.set_travel_dates()
-    home_page.update_travellers_and_search(adults, children)
+    home_page.update_travellers_and_search()
 
     #verify departure
-    dashboard = DashboardPage(page)
+    dashboard = DashboardPage(page,data)
     air_line_details = dashboard.get_air_line_details()
     print(air_line_details)
 
