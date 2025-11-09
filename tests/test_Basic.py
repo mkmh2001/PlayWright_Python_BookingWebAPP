@@ -162,7 +162,7 @@ def test_basic(playwright: Playwright):
     print(air_line_details)
     time.sleep(10)
     save_data_to_excel(air_line_details)
-    page.close()
+
     context.close()
     browser.close()
 
@@ -181,12 +181,3 @@ def select_date(page, month_year: str, day: str):
     expect(day_locator).to_be_visible()
     day_locator.click()
 
-def save_data_to_excel(air_line_details):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Results"
-
-    for row in air_line_details:
-        ws.append(row)
-
-    wb.save("TestResults.xlsx")
