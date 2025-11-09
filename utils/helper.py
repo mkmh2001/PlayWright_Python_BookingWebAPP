@@ -1,9 +1,12 @@
 import json
 import os
-
+import logging
+import pandas as pd
 from openpyxl import Workbook, load_workbook
 from playwright.sync_api import expect
-import pandas as pd
+
+from utils.logger import setup_logger
+logger = setup_logger()
 
 class Helper:
     result = []
@@ -36,24 +39,28 @@ class Helper:
         try:
             element.wait_for()
             element.click()
+            logger.info(f"Clicked on element: {element.text_content()}")
         except Exception as e:
-            print("Error Clicking on Btn" + e)
+            logger.exception(f"Error Clicking on Btn: {e}")
 
     @staticmethod
     def check_radio_btn(element):
         try:
             element.wait_for()
             element.click()
+            logger.info(f"Radio button checked --> : {element.text_content()}")
         except Exception as e:
-            print("Error Clicking on Radio Btn" + e)
+            logger.exception(f"Error Clicking on Radio Btn: {e}")
+
 
     @staticmethod
     def set_dropdown_value(element, option):
         try:
             element.wait_for()
             element.select_option(option)
+            logger.info(f"{option} value  is set to dropdown element : {element.text_content()}")
         except Exception as e:
-            print("Error setting the option to drop down" + e)
+            logger.exception(f"Error setting the option to drop down: {e}")
 
     @staticmethod
     def set_value_in_el(element, input_text):
@@ -61,8 +68,9 @@ class Helper:
             element.wait_for()
             element.click()
             element.fill(input_text)
+            logger.info(f"{input_text} value  is enterd to input element : {element.text_content()}")
         except Exception as e:
-            print("Error setting the value " + input_text + " to element " + e)
+            logger.exception(f"Error setting the value  {input_text}  to element: {e}")
 
     @staticmethod
     def save_data_to_excel(air_line_details: list, file_name="TestResults.xlsx"):
@@ -99,6 +107,7 @@ class Helper:
             ws.append(row)
 
         wb.save(file_path)  # save inside results folder
+        logger.info("Test results are saved to excel")
 
     @staticmethod
     def get_test_data():
@@ -114,5 +123,4 @@ class Helper:
     def get_location_code(location):
         with open('data/city_name_mapping.json') as json_file:
             data = json.load(json_file)
-            print(data[location])
             return data[location]
