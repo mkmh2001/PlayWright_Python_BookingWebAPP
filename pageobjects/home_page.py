@@ -1,6 +1,7 @@
-from playwright.sync_api import expect
-
 from utils.helper import Helper
+from utils.logger import setup_logger
+logger = setup_logger()
+
 class HomePage :
 
     def __init__(self, page, data):
@@ -45,18 +46,18 @@ class HomePage :
         # Closing the Sign in Pop up
         if self.close_sign_in_form.is_visible():
             self.close_sign_in_form.click()
-            print("Sign In form showed & it is closed")
+            logger.info("Sign in pop is closed")
         else:
-            print("Sign In form not showed")
+            logger.info("Sign in pop is not shown")
 
         Helper.click_btn(self.flights)
 
         # waiting for all APIs to load
         self.page.wait_for_load_state("networkidle")
+        logger.info("Flights page is opened")
 
     def set_filters(self):
         # apply selected filters based on user input
-
         if self.data["round_trip"] == "No" :
             Helper.check_radio_btn(self.one_way)
 
@@ -64,6 +65,7 @@ class HomePage :
             Helper.click_btn(self.direct_flights)
 
         Helper.set_dropdown_value(self.cabin_class, self.data["cabin_class"])
+        logger.info("All the required filters are set")
 
     def set_departure_place(self):
         Helper.click_btn(self.leave_from_btn)
@@ -72,7 +74,6 @@ class HomePage :
         self.selected_places.wait_for()
         count = self.selected_places.count()
         for i in range(count):
-            print("clicking  th button")
             self.selected_places.nth(i).click()
 
         # Enter the Departure
@@ -88,6 +89,7 @@ class HomePage :
         # Verify correct location is selected
         selected_location = self.selected_depr.nth(0).text_content()
         assert selected_location.split(" ")[0] == Helper.get_location_code(self.data["source"])
+        logger.info("Departure place is set")
 
     def set_destination_place(self):
         destination = self.data["destination"]
@@ -104,8 +106,8 @@ class HomePage :
 
         self.selected_dst.nth(2).wait_for()
         selected_destination = self.selected_dst.nth(2).text_content()
-        print(">>> "+selected_destination)
         assert selected_destination.split(" ")[0] == Helper.get_location_code(destination)
+        logger.info("Destination place is set")
 
     def set_travel_dates(self):
         # travel_date = str(self.data["travel_date"])
@@ -114,6 +116,7 @@ class HomePage :
         # month_year = temp[1]
         # self.helper.select_date(self.page, month_year, day)
         self.helper.select_date(self.page, "February 2026", "20")
+        logger.info("Travel dates are set")
 
     def update_travellers_and_search(self):
         adults = self.data["adults"]
@@ -135,3 +138,5 @@ class HomePage :
         # Click search & wait for list to load
         Helper.click_btn(self.search_btn)
         self.plane_list.wait_for(timeout=60000)
+        logger.info("Updated travellers and searched for the flights")
+
