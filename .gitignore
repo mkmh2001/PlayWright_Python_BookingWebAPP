@@ -16,3 +16,12 @@ venv/
 
 # macOS
 .DS_Store
+
+#Test results
+TestResults.xlsx
+
+# Ignore HTML reports (pytest-html)
+*.html
+
+# Ignore entire results folder
+test_results/

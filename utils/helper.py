@@ -1,10 +1,9 @@
+import json
 import os
 
 from openpyxl import Workbook, load_workbook
 from playwright.sync_api import expect
 import pandas as pd
-
-
 
 class Helper:
     result = []
@@ -33,6 +32,39 @@ class Helper:
         day_locator.click()
 
     @staticmethod
+    def click_btn(element):
+        try:
+            element.wait_for()
+            element.click()
+        except Exception as e:
+            print("Error Clicking on Btn" + e)
+
+    @staticmethod
+    def check_radio_btn(element):
+        try:
+            element.wait_for()
+            element.click()
+        except Exception as e:
+            print("Error Clicking on Radio Btn" + e)
+
+    @staticmethod
+    def set_dropdown_value(element, option):
+        try:
+            element.wait_for()
+            element.select_option(option)
+        except Exception as e:
+            print("Error setting the option to drop down" + e)
+
+    @staticmethod
+    def set_value_in_el(element, input_text):
+        try:
+            element.wait_for()
+            element.click()
+            element.fill(input_text)
+        except Exception as e:
+            print("Error setting the value " + input_text + " to element " + e)
+
+    @staticmethod
     def save_data_to_excel(air_line_details: list, file_name="TestResults.xlsx"):
         # Ensure 'results' folder exists
         folder = "test_results"
@@ -42,7 +74,7 @@ class Helper:
         file_path = os.path.join(folder, file_name)  # path inside results folder
 
         # Column headers
-        headers = ["Airline", "Price", "Departure Time", "Arrival Time"]
+        headers = ["Airline","From", "To", "Price", "Departure Time", "Arrival Time"]
 
         if Helper.first_run:
             # First test → create new workbook (clears old content)
@@ -77,3 +109,10 @@ class Helper:
             passenger_details.append(row.to_dict())
 
         return passenger_details
+
+    @staticmethod
+    def get_location_code(location):
+        with open('data/city_name_mapping.json') as json_file:
+            data = json.load(json_file)
+            print(data[location])
+            return data[location]
